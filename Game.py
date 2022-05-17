@@ -3,7 +3,7 @@ from enum import Enum
 import random as rnd
 from typing import List, Any
 
-RECORD_RATH = "C:/Users/Ivan/PycharmProjects/myGame/resources/Record"
+RECORD_RATH = "resources/Record"
 
 
 class GameState(Enum):
@@ -48,7 +48,7 @@ class GameCell:
 
 
 class Game:
-    def __init__(self, row_count: int, col_count: int, color_count: int, current_level: int):
+    def __init__(self, row_count: int, col_count: int, color_count: int, start_level: int):
         self._state = None
         self._row_count = row_count
         self._col_count = col_count
@@ -56,7 +56,8 @@ class Game:
         self._colors = []
         self._field = []
         self._level_counter = 0
-        self._current_level = current_level
+        self._start_level = start_level
+        self._current_level = start_level
         self._record = self.get_record()
         self._score = 0
         self.new_game()
@@ -80,6 +81,10 @@ class Game:
     @property
     def colors(self) -> list:
         return self._colors
+
+    @property
+    def color_count(self):
+        return self._color_count
 
     @property
     def state(self) -> GameState:
@@ -191,7 +196,6 @@ class Game:
     def update_playing_state(self):
         if self.is_game_over():
             self._state = GameState.FAIL
-            print("sad")
 
     def is_game_over(self):
         for row in range(self.row_count):

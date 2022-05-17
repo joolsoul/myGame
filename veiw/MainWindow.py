@@ -1,19 +1,19 @@
-from MainWindowUI import Ui_Game as GameUI
+from UI.MainWindowUI import Ui_Game as GameUI
 from Game import *
 
 from PyQt5.QtGui import QMouseEvent, QPainter, QStandardItemModel, QColor
 from PyQt5.QtWidgets import QMainWindow, QItemDelegate, QStyleOptionViewItem
 from PyQt5.QtCore import QModelIndex, Qt
-
-
+from veiw.SettingsWindow import SettingsWindow
+from veiw.GameOverWindow import *
 
 class MainWindow(QMainWindow, GameUI):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
 
-        self._game = Game(11, 8, 4, 2)
-        self.game_resize(self._game)
+        self.game = Game(11, 8, 4, 2)
+        self.game_resize(self.game)
 
         class MyDelegate(QItemDelegate):
             def __init__(self, parent=None, *args):
@@ -32,21 +32,36 @@ class MainWindow(QMainWindow, GameUI):
 
         self.game_field.mousePressEvent = new_mouse_press_event
 
+        self.actionExit.triggered.connect(lambda: self.close())
+        self.actionSettings.triggered.connect(self.open_settings)
+        self.actionNew_game.triggered.connect(self.new_game)
+
     def game_resize(self, game: Game) -> None:
         model = QStandardItemModel(game.row_count, game.col_count)
         self.game_field.setModel(model)
-        self.level_number.setText(str(self._game.current_level))
-        self.record_number.display(self._game.record)
-        self.score_number.display(self._game.score)
-        self.level_number.setText(str(self._game.current_level))
+        self.level_number.setText(str(self.game.current_level))
+        self.record_number.display(self.game.record)
+        self.score_number.display(self.game.score)
+        self.level_number.setText(str(self.game.current_level))
         self.resize(game.col_count * 50 + 20, game.row_count * 50 + 116)
+        self.update_view()
+
+    def open_settings(self):
+        SettingsWindow(self).show()
+
+    def new_game(self):
+        self.game = Game(self.game.row_count, self.game.col_count, self.game.color_count, self.game._start_level)
+        self.level_number.setText(str(self.game.current_level))
+        self.record_number.display(self.game.record)
+        self.score_number.display(self.game.score)
+        self.level_progress.setValue(int(self.game.level_counter * 100 / 7))
         self.update_view()
 
     def update_view(self):
         self.game_field.viewport().update()
 
     def on_item_paint(self, e: QModelIndex, painter: QPainter, option: QStyleOptionViewItem) -> None:
-        cell = self._game.field[e.row()][e.column()]
+        cell = self.game.field[e.row()][e.column()]
         if not cell.block:
             painter.setBrush(Qt.gray)
         else:
@@ -56,9 +71,16 @@ class MainWindow(QMainWindow, GameUI):
 
     def on_item_clicked(self, e: QModelIndex, me: QMouseEvent = None) -> None:
         if me.button() == Qt.LeftButton or me.button() == Qt.RightButton:
-            self._game.on_button_click(e.row(), e.column())
-            self.level_number.setText(str(self._game.current_level))
-            self.record_number.display(self._game.record)
-            self.score_number.display(self._game.score)
-            self.level_progress.setValue(self._game.level_counter * 100 / 7)
+            self.game.on_button_click(e.row(), e.column())
+            self.is_game_over()
+            self.level_number.setText(str(self.game.current_level))
+            self.record_number.display(self.game.record)
+            self.score_number.display(self.game.score)
+            self.level_progress.setValue(int(self.game.level_counter * 100 / 7))
         self.update_view()
+
+    def is_game_over(self):
+        if self.game.state is GameState.FAIL:
+            GameOverWindow(self).show()
+
+

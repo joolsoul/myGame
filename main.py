@@ -1,8 +1,7 @@
 import sys
 import traceback
 
-from MainWindow import MainWindow
-from Game import *
+from veiw.MainWindow import MainWindow
 
 from PyQt5.QtWidgets import QApplication, QMessageBox
 
